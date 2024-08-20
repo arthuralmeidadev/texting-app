@@ -22,7 +22,7 @@ type WSController struct {
 	broadcast chan reqBody
 }
 
-func (self *WSController) handleConn(w http.ResponseWriter, r *http.Request) {
+func (ctl *WSController) handleConn(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -40,23 +40,27 @@ func (self *WSController) handleConn(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !usrIsSet {
-			self.clients[msg.Username] = ws
+			ctl.clients[msg.Username] = ws
 			usrIsSet = true
 		}
 
-		self.broadcast <- msg
+		ctl.broadcast <- msg
 	}
 }
 
-func (self *WSController) handleMessages() {
-	msg := <-self.broadcast
+func (ctl *WSController) handleMessages() {
+	msg := <-ctl.broadcast
 	for _, recip := range msg.Recipients {
-		client := self.clients[recip]
-		err := client.ReadJSON(msg.Message)
+		cli := ctl.clients[recip]
+        if cli == nil {
+            continue
+        }
+
+		err := cli.ReadJSON(msg.Message)
 		if err != nil {
 			log.Printf("error: %v", err)
-			client.Close()
-			delete(self.clients, recip)
+			cli.Close()
+			delete(ctl.clients, recip)
 		}
 	}
 }
