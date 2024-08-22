@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"texting-app/internal/pkg/auth"
+	"texting-app/internal/pkg/providers"
+	"texting-app/internal/pkg/store"
 	"texting-app/templates"
 )
 
@@ -16,12 +17,17 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-        return
-    case http.MethodPost:
+		return
+	case http.MethodPost:
 		username := r.FormValue("username")
 		password := r.FormValue("password")
+		store, err := store.GetStore()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
-		user, err := auth.AuthenticateUser(username, password)
+		userStore := providers.NewUserProvider(store)
+		user, err := userStore.AuthUser(username, password)
 		if err != nil {
 			if err.Error() == "unauthorized" {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -31,15 +37,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		token := user.GetToken()
+		token, err := user.NewToken()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		cookie := &http.Cookie{
 			Name:    "authenticationToken",
-			Value:   token,
+			Value:   string(token),
 			Expires: time.Now().Add(time.Hour * 2),
 		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/home", http.StatusFound)
-        return
+		return
 	default:
 		return
 	}
