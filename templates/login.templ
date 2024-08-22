@@ -1,0 +1,88 @@
+package templates
+
+css page() {
+	background-color: #ededed;
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	justify-content: center;
+	justify-content: center;
+	align-items: center;
+}
+
+css frame() {
+	background-color: white;
+	border-radius: 8px;
+	padding: 2rem;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+css title() {
+	font: 3rem Helvetica;
+	font-weight: bold;
+	color: #5757ff;
+    margin: 0%;
+    margin-bottom: 3rem;
+}
+
+css submit() {
+	appearance: none;
+	outline: none;
+	border: none;
+	border-radius: 4px;
+	background-color: #5757ff;
+	font: 1rem Helvetica;
+	font-weight: bold;
+	color: white;
+	margin-top: 2rem;
+	width: 100%;
+    padding-block: .4rem;
+}
+
+css inputLabel() {
+    font: 1rem Helvetica;
+    color: #888;
+    margin: 0%;
+    margin-top: 1rem;
+    margin-bottom: .5rem;
+}
+
+css input() {
+    font: 1rem Helvetica;
+    padding: .4rem;
+    outline: none;
+	appearance: none;
+    border: solid #bbb 1px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+templ Login() {
+	@base("Login") {
+		<main class={ page() }>
+			<form 
+            class={ frame() }
+            hx-post="/login"
+            >
+				<h1 class={ title() }>GoMessage</h1>
+				<div>
+					<p class={ inputLabel() }>
+						Username
+					</p>
+					<input name="username" type="text" class={ input() }/>
+				</div>
+				<div>
+					<p class={ inputLabel() }>
+						Password
+					</p>
+					<input name="password" type="password" class={ input() }/>
+				</div>
+				<button class={ submit() } type="submit">
+					Login
+				</button>
+			</form>
+		</main>
+	}
+}

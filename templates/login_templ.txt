@@ -1,0 +1,16 @@
+<main class=\"
+\">
+<form class=\"
+\" hx-post=\"/login\">
+<h1 class=\"
+\">GoMessage</h1><div>
+<p class=\"
+\">Username</p>
+<input name=\"username\" type=\"text\" class=\"
+\"></div><div>
+<p class=\"
+\">Password</p>
+<input name=\"password\" type=\"password\" class=\"
+\"></div>
+<button class=\"
+\" type=\"submit\">Login</button></form></main>
