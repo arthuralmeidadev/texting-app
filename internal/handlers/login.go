@@ -12,8 +12,8 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		templ := templates.Login()
-		err := templ.Render(r.Context(), w)
+		component := templates.Login()
+		err := component.Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -42,13 +42,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		cookie := &http.Cookie{
+		authCookie := &http.Cookie{
 			Name:    "authenticationToken",
 			Value:   string(token),
 			Expires: time.Now().Add(time.Hour * 2),
 		}
-		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/home", http.StatusFound)
+		http.SetCookie(w, authCookie)
+		http.Redirect(w, r, "/chats", http.StatusFound)
 		return
 	default:
 		return

@@ -14,12 +14,6 @@ type UserProvider struct {
 	store userStore
 }
 
-func NewUserProvider(s userStore) *UserProvider {
-	return &UserProvider{
-		store: s,
-	}
-}
-
 func (s *UserProvider) AuthUser(username string, password string) (*models.User, error) {
 	user, err := s.store.GetUser(username)
 	if err != nil {
@@ -40,4 +34,10 @@ func (s *UserProvider) AuthUser(username string, password string) (*models.User,
 	}
 
 	return user, nil
+}
+
+func NewUserProvider(s userStore) *UserProvider {
+	return &UserProvider{
+		store: s,
+	}
 }
