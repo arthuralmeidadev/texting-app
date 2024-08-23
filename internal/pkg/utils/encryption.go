@@ -15,34 +15,34 @@ type cryptoMng struct {
 }
 
 func (c *cryptoMng) Encrypt(value string, factor string) ([]byte, error) {
-    hash := sha256.New()
-    hash.Write([]byte(factor))
-    ciphertext, err := rsa.EncryptOAEP(
-        hash,
-        rand.Reader,
-        c.pubKey,
-        []byte(value),
-        nil,
-    )
-    if err != nil {
-        return nil, err
-    }
+	hash := sha256.New()
+	hash.Write([]byte(factor))
+	ciphertext, err := rsa.EncryptOAEP(
+		hash,
+		rand.Reader,
+		c.pubKey,
+		[]byte(value),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return ciphertext, nil
 }
 
 func (c *cryptoMng) Decrypt(ciphertext string, factor string) ([]byte, error) {
-    hash := sha256.New()
-    hash.Write([]byte(factor))
-    plainText, err := rsa.DecryptOAEP(
-        hash,
-        rand.Reader,
-        c.privKey,
-        []byte(ciphertext),
-        nil,
-    )
-    if err != nil {
-        return nil, err
-    }
+	hash := sha256.New()
+	hash.Write([]byte(factor))
+	plainText, err := rsa.DecryptOAEP(
+		hash,
+		rand.Reader,
+		c.privKey,
+		[]byte(ciphertext),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
 	return plainText, nil
 }
 

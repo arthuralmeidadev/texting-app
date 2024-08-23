@@ -52,9 +52,9 @@ func (ctl *WSController) HandleMessages() {
 	msg := <-ctl.broadcast
 	for _, recip := range msg.Recipients {
 		cli := ctl.clients[recip]
-        if cli == nil {
-            continue
-        }
+		if cli == nil {
+			continue
+		}
 
 		err := cli.ReadJSON(msg.Message)
 		if err != nil {
