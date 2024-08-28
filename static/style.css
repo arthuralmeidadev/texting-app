@@ -1,0 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+:root {
+    --main-accent: #8D22FF;
+    --dimmed-accent: #2E1D4F;
+    --light-accent: #A48CC5;
+    --background: #080808;
+    --foreground: #FFFFFF;
+    --dimmed-foreground: #AAAAAA;
+    --window-color: #141414;
+    --neutral-tile: #1C1C1C;
+    --focused-tile: #2C2C2C;
+    --border-witdh: 2px;
+    --text-l: 30px;
+    --text-xl: 50px;
+    --text-md: 22px;
+    --text-base: 18px;
+    --text-sm: 14px;
+    --text-xs: 10px;
+}
+
+* {
+    margin: 0%;
+    font-family: "Inter", sans-serif;
+    font-optical-sizing: auto;
+}
+
+button {
+    outline: none;
+    border: none;
+    appearance: none;
+    background: none;
+    padding: 0%;
+}
+
+body {
+    all: unset;
+    margin: 0%;
+    height: 100%;
+}
+
+.page {
+    background-color: var(--background);
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.frame {
+    background-color: var(--window-color);
+    border: var(--border-witdh) solid var(--main-accent);
+    border-radius: 15px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#title {
+    font-size: var(--text-l);
+    font-weight: bold;
+    color: var(--foreground);
+    margin: 0%;
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.submit {
+    appearance: none;
+    outline: none;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--foreground);
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--window-color);
+    margin-top: 2rem;
+    width: 100%;
+    padding-block: .4rem;
+}
+
+.input-label {
+    font-size: 1rem;
+    color: var(--dimmed-foreground);
+    margin: 0%;
+    margin-top: 1rem;
+    margin-bottom: .5rem;
+}
+
+.input {
+    font-size: 1rem;
+    padding: .4rem;
+    outline: none;
+    appearance: none;
+    border: solid transparent 1px;
+    color: var(--foreground);
+    border-radius: 10px;
+    width: calc(100% - 1rem);
+    background-color: var(--focused-tile);
+}
+
+.button-icon {
+    padding: 0%;
+    background-color: transparent;
+    border: none;
+    appearance: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#sign-up-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2%;
+    margin-top: 1rem;
+}
+
+#sign-up-btn p {
+    color: var(--foreground);
+    font-size: var(--text-xs);
+}
+
+#sign-up-btn button {
+    color: var(--light-accent);
+    font-size: var(--text-xs);
+}
+
+#chats {
+    min-width: 70%;
+    height: 75%;
+    padding: .5rem;
+}
+
+#msg-section {
+    border-right: var(--border-witdh) solid var(--focused-tile);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#msg-section header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .5rem;
+    padding-left: .8rem;
+    flex: 0 1 auto;
+}
+
+#msg-section header h1 {
+    color: var(--foreground);
+    font-weight: bold;
+    font-size: var(--text-l);
+}
+
+#msg-list-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    position: relative;
+}
+
+#chat-header-btns {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+#chat-search img {
+    scale: .8;
+}
+
+#new-chat-btn {
+    background-color: var(--main-accent);
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    height: 4rem;
+    width: 4rem;
+    border-radius: 50%;
+    scale: .9;
+    right: 1rem;
+    bottom: 2.4rem;
+}
+
+#new-chat-btn img {
+    position: absolute;
+    height: 2.4rem;
+}
+
+#new-chat-btn :last-child {
+    scale: 1;
+    fill: var(--main-accent);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    height: fit-content;
+}
+
+#def-no-chat {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1 1 auto;
+}
+
+#def-no-chat button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--foreground);
+    font-size: var(--text-md);
+    gap: 1rem;
+    opacity: .5;
+}
+
+#chats-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline: 2rem;
+    padding-top: .8rem;
+    flex: 0 1 auto;
+}
+
+#chats-count {
+    font-size: var(--text-xs);
+    color: var(--foreground);
+}
+
+#unread-msg-count {
+    font-size: var(--text-xs);
+    color: var(--foreground);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+#unread-msg-count div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: var(--main-accent);
+    border-radius: 50%;
+    width: 1.2rem;
+    height: 1.2rem;
+    font-weight: bold;
+}
+
+#chat-section {}
