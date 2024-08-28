@@ -7,33 +7,58 @@ import (
 )
 
 type userStore interface {
-	GetUser(username string) (*models.User, error)
+	GetUser(usrn string) (*models.User, error)
+	CreateUser(usrn, pw string) (*models.User, error)
 }
 
 type UserProvider struct {
 	store userStore
 }
 
-func (s *UserProvider) AuthUser(username string, password string) (*models.User, error) {
-	user, err := s.store.GetUser(username)
+var cryptMngr = utils.NewCryptoManager(
+	"vault/public-key.pem",
+	"vault/private-key.pem",
+)
+
+func (p *UserProvider) AuthUser(usrn, pw string) (*models.User, error) {
+	usr, err := p.store.GetUser(usrn)
 	if err != nil {
 		return nil, err
 	}
 
-	cryptMngr := utils.NewCryptoManager(
-		"vault/public-key.pem",
-		"vault/private-key.pem",
-	)
-	decrypted, err := cryptMngr.Decrypt(user.Password, username)
+	decrypted, err := cryptMngr.Decrypt(usr.Password, usrn)
 	if err != nil {
 		return nil, err
 	}
 
-	if password != string(decrypted) {
+	if pw != string(decrypted) {
 		return nil, errors.New("unauthorized")
 	}
 
-	return user, nil
+	return usr, nil
+}
+
+func (p *UserProvider) GetUser(usrn string) (*models.User, error) {
+	usr, err := p.store.GetUser(usrn)
+	if err != nil {
+		return nil, err
+	}
+
+	return usr, nil
+}
+
+func (p *UserProvider) CreateUser(usrn, pw string) (*models.User, error) {
+	encrypted, err := cryptMngr.Encrypt(pw, usrn)
+	if err != nil {
+		return nil, err
+	}
+
+	usr, err := p.store.CreateUser(usrn, string(encrypted))
+	if err != nil {
+		return nil, err
+	}
+
+	return usr, nil
 }
 
 func NewUserProvider(s userStore) *UserProvider {

@@ -16,20 +16,24 @@ type store struct {
 	db *sql.DB
 }
 
-func (p *store) Close() error {
-	if p.db == nil {
+func (s *store) checkConn() {
+	if s.db == nil {
 		panic("Missing database connection")
 	}
-
-	return p.db.Close()
 }
 
-func (p *store) GetUser(username string) (*models.User, error) {
-	if p.db == nil {
-		panic("Missing database connection")
-	}
+func (s *store) queryError(q string, err error) error {
+	return fmt.Errorf("Error executing query:\n%s\n\t%v", q, err)
+}
 
-	query := `
+func (s *store) Close() error {
+	s.checkConn()
+	return s.db.Close()
+}
+
+func (s *store) GetUser(usrn string) (*models.User, error) {
+	s.checkConn()
+	q := `
         SELECT TOP 1
             USERNAME
             , PASSWORD
@@ -37,18 +41,43 @@ func (p *store) GetUser(username string) (*models.User, error) {
         WHERE 1 = 1
             AND USERNAME = ?;
     `
-	user := models.User{}
-	err := p.db.QueryRow(query, username).Scan(&user.Username, &user.Password)
+	usr := models.User{}
+	err := s.db.QueryRow(q, usrn).Scan(&usr.Username, &usr.Password)
 	if err != nil {
-		return nil, fmt.Errorf("Error executing query:\n%s\n\t%v", query, err)
+		return nil, s.queryError(q, err)
 	}
 
-	return &user, nil
+	return &usr, nil
+}
+
+func (s *store) CreateUser(usrn, pw string) (*models.User, error) {
+	s.checkConn()
+	q := `
+        INSERT INTO
+        USERS VALUES (
+            ?,
+            ?
+        );
+
+        SELECT TOP 1
+            USERNAME
+            , PASSWORD
+        FROM USERS (NOLOCK)
+        WHERE 1 = 1
+            AND USERNAME = ?;
+    `
+	usr := models.User{}
+	err := s.db.QueryRow(q, usrn, pw).Scan(&usr.Username, &usr.Password)
+	if err != nil {
+		return nil, s.queryError(q, err)
+	}
+
+	return &usr, nil
 }
 
 var (
-	provInstance *store
-	once         sync.Once
+	storeInst *store
+	once      sync.Once
 )
 
 func instantiate() (*store, error) {
@@ -63,8 +92,8 @@ func instantiate() (*store, error) {
 func GetStore() (*store, error) {
 	var err error
 	once.Do(func() {
-		provInstance, err = instantiate()
+		storeInst, err = instantiate()
 	})
 
-	return provInstance, err
+	return storeInst, err
 }
