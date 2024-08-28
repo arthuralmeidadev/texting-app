@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"os"
 )
 
@@ -14,7 +15,7 @@ type cryptoMng struct {
 	privKey *rsa.PrivateKey
 }
 
-func (c *cryptoMng) Encrypt(value string, factor string) ([]byte, error) {
+func (c *cryptoMng) Encrypt(value, factor string) ([]byte, error) {
 	hash := sha256.New()
 	hash.Write([]byte(factor))
 	ciphertext, err := rsa.EncryptOAEP(
@@ -30,7 +31,7 @@ func (c *cryptoMng) Encrypt(value string, factor string) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (c *cryptoMng) Decrypt(ciphertext string, factor string) ([]byte, error) {
+func (c *cryptoMng) Decrypt(ciphertext, factor string) ([]byte, error) {
 	hash := sha256.New()
 	hash.Write([]byte(factor))
 	plainText, err := rsa.DecryptOAEP(
@@ -50,14 +51,14 @@ func (c *cryptoMng) Decrypt(ciphertext string, factor string) ([]byte, error) {
 //
 // If there is a problem reading the files or parsing them into RSA keys,
 // calls panic() with the root error as argument
-func NewCryptoManager(pubKeyPath string, privKeyPath string) *cryptoMng {
+func NewCryptoManager(pubKeyPath, privKeyPath string) *cryptoMng {
 	pubKeyFile, err := os.ReadFile(pubKeyPath)
 	if err != nil {
 		panic(err)
 	}
 
 	pubKeyPEM, _ := pem.Decode(pubKeyFile)
-	pubKey, err := x509.ParsePKCS1PublicKey(pubKeyPEM.Bytes)
+	pubKey, err := x509.ParsePKIXPublicKey(pubKeyPEM.Bytes)
 	if err != nil {
 		panic(err)
 	}
@@ -68,13 +69,21 @@ func NewCryptoManager(pubKeyPath string, privKeyPath string) *cryptoMng {
 	}
 
 	privKeyPEM, _ := pem.Decode(privKeyFile)
-	privKey, err := x509.ParsePKCS1PrivateKey(privKeyPEM.Bytes)
+	privKey, err := x509.ParsePKCS8PrivateKey(privKeyPEM.Bytes)
 	if err != nil {
 		panic(err)
 	}
 
+	pubRsaKey, okPubKeyType := pubKey.(*rsa.PublicKey)
+	privRsaKey, okPrivKeyType := privKey.(*rsa.PrivateKey)
+	if !okPubKeyType {
+		panic(errors.New("Invalid public key type. Expected RSA key"))
+	} else if !okPrivKeyType {
+		panic(errors.New("Invalid private key type. Expected RSA key"))
+	}
+
 	return &cryptoMng{
-		pubKey:  pubKey,
-		privKey: privKey,
+		pubKey:  pubRsaKey,
+		privKey: privRsaKey,
 	}
 }
