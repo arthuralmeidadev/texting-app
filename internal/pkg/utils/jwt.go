@@ -2,9 +2,8 @@ package utils
 
 import (
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -15,58 +14,75 @@ import (
 type jwtManager struct{}
 
 var (
-	signKey *rsa.PrivateKey
-	once    sync.Once
+	pubKey *rsa.PublicKey
+	privKey *rsa.PrivateKey
+	oncePubKey    sync.Once
+	oncePrivKey    sync.Once
 )
 
 func (m *jwtManager) NewToken(username string) (string, error) {
-	once.Do(func() {
-		signKeyFile, err := os.ReadFile("vault/signatureKey.pem")
+	oncePrivKey.Do(func() {
+		privKeyFile, err := os.ReadFile("vault/private-key.pem")
 		if err != nil {
 			panic(err)
 		}
 
-		signKeyPEM, _ := pem.Decode(signKeyFile)
-		signKey, err = x509.ParsePKCS1PrivateKey(signKeyPEM.Bytes)
+		privKey, err = jwt.ParseRSAPrivateKeyFromPEM(privKeyFile)
 		if err != nil {
 			panic(err)
 		}
 	})
 
-	if signKey == nil {
+	if privKey == nil {
 		return "", errors.New("No token signature key")
 	}
 
-	token := jwt.NewWithClaims(
-		&jwt.SigningMethodRSA{},
+	tk := jwt.NewWithClaims(
+		jwt.SigningMethodRS256,
 		jwt.MapClaims{
 			"username": username,
 			"exp":      time.Now().Add(time.Hour * 2).Unix(),
 		},
 	)
 
-	tokenString, err := token.SignedString(signKey)
+	tkStr, err := tk.SignedString(privKey)
 	if err != nil {
 		return "", err
 	}
 
-	return tokenString, nil
+	return tkStr, nil
 }
 
-func (m *jwtManager) VerifyToken(tokenString string) error {
-	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
-		if signKey == nil {
-			return nil, errors.New("No token verification key")
+func (m *jwtManager) VerifyToken(tkStr string) error {
+	oncePubKey.Do(func() {
+		pubKeyFile, err := os.ReadFile("vault/public-key.pem")
+		if err != nil {
+			panic(err)
 		}
 
-		return signKey, nil
+		pubKey, err = jwt.ParseRSAPublicKeyFromPEM(pubKeyFile)
+		if err != nil {
+			panic(err)
+		}
+	})
+
+	if pubKey == nil {
+		return errors.New("No token verification key")
+	}
+
+	tk, err := jwt.Parse(tkStr, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected method: %v", t.Header["alg"])
+		}
+
+		return pubKey, nil
 	})
 
 	if err != nil {
 		return err
 	}
 
-	if !token.Valid {
+	if !tk.Valid {
 		return errors.New("Invalid token")
 	}
 
