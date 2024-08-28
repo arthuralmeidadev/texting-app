@@ -1,16 +1,1 @@
-<main class=\"
-\">
-<form class=\"
-\" hx-post=\"/login\">
-<h1 class=\"
-\">GoMessage</h1><div>
-<p class=\"
-\">Username</p>
-<input name=\"username\" type=\"text\" class=\"
-\"></div><div>
-<p class=\"
-\">Password</p>
-<input name=\"password\" type=\"password\" class=\"
-\"></div>
-<button class=\"
-\" type=\"submit\">Login</button></form></main>
+<main class=\"page\"><form style=\"padding: 2rem;\" class=\"frame\" hx-post=\"/login\"><h1 id=\"title\">GoMessage | Login</h1><div><p class=\"input-label\">Username</p><input name=\"username\" type=\"text\" class=\"input\"></div><div><p class=\"input-label\">Password</p><input name=\"password\" type=\"password\" class=\"input\"></div><button class=\"submit\" type=\"submit\">Log in</button><div id=\"sign-up-btn\"><p>Not registered yet?</p><button type=\"button\" onclick=\"window.location.href = &#39;/signup&#39;\">Sign up now!</button></div></form></main>
