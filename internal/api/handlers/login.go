@@ -12,22 +12,23 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		component := templates.Login()
-		err := component.Render(r.Context(), w)
+		comp := templates.Login()
+		err := comp.Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
 		return
 	case http.MethodPost:
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		usrn := r.FormValue("username")
+		pw := r.FormValue("password")
 		store, err := store.GetStore()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		userStore := providers.NewUserProvider(store)
-		user, err := userStore.AuthUser(username, password)
+		usrStore := providers.NewUserProvider(store)
+		usr, err := usrStore.AuthUser(usrn, pw)
 		if err != nil {
 			if err.Error() == "unauthorized" {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -37,18 +38,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		token, err := user.NewToken()
+		tk, err := usr.NewToken()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		authCookie := &http.Cookie{
 			Name:    "authenticationToken",
-			Value:   string(token),
+			Value:   string(tk),
 			Expires: time.Now().Add(time.Hour * 2),
 		}
 		http.SetCookie(w, authCookie)
-		http.Redirect(w, r, "/chats", http.StatusFound)
+		w.Header().Set("HX-Redirect", "/chats")
+		w.WriteHeader(http.StatusFound)
 		return
 	default:
 		return
