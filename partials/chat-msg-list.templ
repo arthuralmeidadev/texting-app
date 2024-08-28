@@ -1,0 +1,52 @@
+package partials
+
+import "time"
+import "fmt"
+
+type ChatMsg struct {
+	Username    string
+	Nametag     string
+	LastMsg     string
+	LastMsgTime time.Time
+	SentByYou   bool
+	UnseenMsgs  int8
+}
+
+func countUnseen(chatMsgs []ChatMsg) int8 {
+    var tally int8
+    for i := 0; i < len(chatMsgs); i++ {
+        tally += chatMsgs[i].UnseenMsgs  
+    }
+
+    return tally
+}
+
+templ ChatMsgList(chatMsgs []ChatMsg) {
+	if len(chatMsgs) == 0 {
+		<div id="def-no-chat">
+			<button>
+				<img alt="plus" src="/public/icons/plus-bold.svg"/>
+				Start messaging
+			</button>
+		</div>
+	} else {
+		for _, chatMsg := range chatMsgs {
+			<div class="chat-msg-item">
+				<p>
+					{ chatMsg.Username }
+				</p>
+			</div>
+		}
+	}
+	<div id="chats-info">
+		<p id="chats-count">
+			{ fmt.Sprintf("%d", len(chatMsgs)) } chats
+		</p>
+        <div id="unread-msg-count">
+            <div>
+              { fmt.Sprintf("%d", countUnseen(chatMsgs))}   
+            </div>
+            Unread messages
+        </div>
+	</div>
+}
