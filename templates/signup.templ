@@ -1,0 +1,38 @@
+package templates
+
+templ Signup() {
+	@base("Signup") {
+		<main class="page">
+			<form style="padding: 2rem;" class="frame" hx-post="/signup">
+				<h1 id="title">GoMessage | Signup</h1>
+				<div>
+					<p class="input-label">
+						Username
+					</p>
+					<input name="username" type="text" class="input"/>
+				</div>
+				<div>
+					<p class="input-label">
+						Password
+					</p>
+					<input name="password" type="password" class="input"/>
+				</div>
+				<div>
+					<p class="input-label">
+						Repeat password
+					</p>
+					<input name="repeatPassword" type="password" class="input"/>
+				</div>
+				<button class="submit" type="submit">
+					Sign up
+				</button>
+				<div id="sign-up-btn">
+					<p>
+						Already have an account?
+					</p>
+					<button type="button" onclick="window.location.href = '/login';">Log in instead!</button>
+				</div>
+			</form>
+		</main>
+	}
+}
