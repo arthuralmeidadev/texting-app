@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"errors"
 	"os"
@@ -15,30 +16,32 @@ type cryptoMng struct {
 	privKey *rsa.PrivateKey
 }
 
-func (c *cryptoMng) Encrypt(value, factor string) ([]byte, error) {
-	hash := sha256.New()
-	hash.Write([]byte(factor))
+func (c *cryptoMng) Encrypt(value string) (string, error) {
 	ciphertext, err := rsa.EncryptOAEP(
-		hash,
+		sha256.New(),
 		rand.Reader,
 		c.pubKey,
 		[]byte(value),
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return ciphertext, nil
+
+	return base64.StdEncoding.EncodeToString([]byte(ciphertext)), nil
 }
 
-func (c *cryptoMng) Decrypt(ciphertext, factor string) ([]byte, error) {
-	hash := sha256.New()
-	hash.Write([]byte(factor))
+func (c *cryptoMng) Decrypt(ciphertext string) ([]byte, error) {
+	decoded, err := base64.StdEncoding.DecodeString(ciphertext)
+	if err != nil {
+		return nil, err
+	}
+
 	plainText, err := rsa.DecryptOAEP(
-		hash,
+		sha256.New(),
 		rand.Reader,
 		c.privKey,
-		[]byte(ciphertext),
+		decoded,
 		nil,
 	)
 	if err != nil {

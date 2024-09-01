@@ -26,7 +26,7 @@ func (p *UserProvider) AuthUser(usrn, pw string) (*models.User, error) {
 		return nil, err
 	}
 
-	decrypted, err := cryptMngr.Decrypt(usr.Password, usrn)
+	decrypted, err := cryptMngr.Decrypt(usr.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -48,12 +48,12 @@ func (p *UserProvider) GetUser(usrn string) (*models.User, error) {
 }
 
 func (p *UserProvider) CreateUser(usrn, pw string) (*models.User, error) {
-	encrypted, err := cryptMngr.Encrypt(pw, usrn)
+	encrypted, err := cryptMngr.Encrypt(pw)
 	if err != nil {
 		return nil, err
 	}
 
-	usr, err := p.store.CreateUser(usrn, string(encrypted))
+	usr, err := p.store.CreateUser(usrn, encrypted)
 	if err != nil {
 		return nil, err
 	}
