@@ -14,13 +14,13 @@ import (
 type jwtManager struct{}
 
 var (
-	pubKey *rsa.PublicKey
-	privKey *rsa.PrivateKey
-	oncePubKey    sync.Once
-	oncePrivKey    sync.Once
+	pubKey      *rsa.PublicKey
+	privKey     *rsa.PrivateKey
+	oncePubKey  sync.Once
+	oncePrivKey sync.Once
 )
 
-func (m *jwtManager) NewToken(username string) (string, error) {
+func (m *jwtManager) NewToken(usrn string) (string, error) {
 	oncePrivKey.Do(func() {
 		privKeyFile, err := os.ReadFile("vault/private-key.pem")
 		if err != nil {
@@ -40,7 +40,7 @@ func (m *jwtManager) NewToken(username string) (string, error) {
 	tk := jwt.NewWithClaims(
 		jwt.SigningMethodRS256,
 		jwt.MapClaims{
-			"username": username,
+			"username": usrn,
 			"exp":      time.Now().Add(time.Hour * 2).Unix(),
 		},
 	)
@@ -53,7 +53,7 @@ func (m *jwtManager) NewToken(username string) (string, error) {
 	return tkStr, nil
 }
 
-func (m *jwtManager) VerifyToken(tkStr string) error {
+func (m *jwtManager) VerifyToken(tkStr string) (string, error) {
 	oncePubKey.Do(func() {
 		pubKeyFile, err := os.ReadFile("vault/public-key.pem")
 		if err != nil {
@@ -67,10 +67,10 @@ func (m *jwtManager) VerifyToken(tkStr string) error {
 	})
 
 	if pubKey == nil {
-		return errors.New("No token verification key")
+		return "", errors.New("No token verification key")
 	}
 
-	tk, err := jwt.Parse(tkStr, func(t *jwt.Token) (interface{}, error) {
+	tk, err := jwt.ParseWithClaims(tkStr, &jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected method: %v", t.Header["alg"])
 		}
@@ -79,14 +79,24 @@ func (m *jwtManager) VerifyToken(tkStr string) error {
 	})
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if !tk.Valid {
-		return errors.New("Invalid token")
+		return "", errors.New("Invalid token")
 	}
 
-	return nil
+	claims, ok := tk.Claims.(*jwt.MapClaims)
+	if !ok {
+		return "", errors.New("Failed to parse jwt claims")
+	}
+
+	usrn, ok := (*claims)["username"].(string)
+	if !ok {
+		return "", errors.New("Failed to retrieve username from jwt claims")
+	}
+
+	return usrn, nil
 }
 
 func NewJwtManager() *jwtManager {
