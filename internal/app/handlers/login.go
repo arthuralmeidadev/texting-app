@@ -16,23 +16,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		err := comp.Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		return
 	case http.MethodPost:
 		usrn := r.FormValue("username")
 		pw := r.FormValue("password")
-		store, err := store.GetStore()
+		storeInst, err := store.GetStore()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
-		usrStore := providers.NewUserProvider(store)
+		usrStore := providers.NewUserProvider(storeInst)
 		usr, err := usrStore.AuthUser(usrn, pw)
 		if err != nil {
-			if err.Error() == "unauthorized" {
+			switch err.Error() {
+			case "no rows":
+				http.Error(w, "404 Not found", http.StatusNotFound)
+			case "unauthorized":
 				http.Error(w, err.Error(), http.StatusUnauthorized)
-			} else {
+			default:
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			return
