@@ -19,19 +19,29 @@ func EnsureAuth(h func(w http.ResponseWriter, r *http.Request)) func(w http.Resp
 	return func(w http.ResponseWriter, r *http.Request) {
 		authCookie, err := r.Cookie("authenticationToken")
 		if err != nil {
-			http.Error(w, "Missing authentication token", http.StatusUnauthorized)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
-		tk := authCookie.Value
+		authTk := authCookie.Value
 		jwtMngr := utils.NewJwtManager()
-        usrn, err := jwtMngr.VerifyToken(tk)
+		usrn, err := jwtMngr.VerifyToken(authTk)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
+			refCookie, err := r.Cookie("refreshToken")
+			if err != nil {
+				http.Error(w, "Missing refresh token", http.StatusUnauthorized)
+				return
+			}
+
+			refTk := refCookie.Value
+			usrn, err = jwtMngr.VerifyToken(refTk)
+			if err != nil {
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				return
+			}
 		}
 
-        r.Header.Set("username", usrn)
+		r.Header.Set("username", usrn)
 
 		h(w, r)
 	}

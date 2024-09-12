@@ -15,8 +15,10 @@ func MapRoutes() *http.ServeMux {
 	mux.HandleFunc("/login", handlers.Login)
 	mux.HandleFunc("/signup", handlers.Signup)
 	mux.HandleFunc("/chats", EnsureAuth(handlers.Chats))
-	mux.HandleFunc("/hx/chat-msg-list", EnsureAuth((handlers.ChatMsgList)))
-	mux.HandleFunc("/hx/new-chat", EnsureAuth(handlers.NewChat))
+	mux.HandleFunc("/hx/chat-msg-list", EnsureAuth(HTMXOnly(handlers.ChatMsgList)))
+	mux.HandleFunc("/hx/new-chat", EnsureAuth(HTMXOnly(handlers.NewChat)))
+	mux.HandleFunc("/hx/friend-list", EnsureAuth(HTMXOnly(handlers.FriendList)))
+	mux.HandleFunc("/hx/user-list", EnsureAuth(HTMXOnly(handlers.UserList)))
 
 	go wsController.HandleMessages()
 

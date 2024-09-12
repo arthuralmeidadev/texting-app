@@ -1,0 +1,4 @@
+<div>
+<div class=\"friend-listed-item\"><img><p>
+</p></div>
+</div>

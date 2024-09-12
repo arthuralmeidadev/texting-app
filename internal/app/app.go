@@ -19,7 +19,10 @@ func Run() error {
 		Handler: router,
 	}
 
-	server.ListenAndServe()
+    err = server.ListenAndServe()
+    if err != nil {
+        return err
+    }
 
 	return nil
 }

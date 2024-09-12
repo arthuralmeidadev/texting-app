@@ -96,5 +96,6 @@ func (ctl *WSController) HandleMessages() {
 				cli.Close()
 			}
 		}
+        <-msgStoreChan
 	}
 }

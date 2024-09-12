@@ -1,15 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"texting-app/internal/app"
 )
 
 func main() {
-	error := app.Run()
-	if error != nil {
-		fmt.Println("App module unable to start.")
+	err := app.Run()
+	if err != nil {
+        log.Println("App module unable to start. Reason:")
+        log.Println(err)
 	} else {
-		fmt.Println("App module started successfully.")
+		log.Println("App module started successfully.")
 	}
 }

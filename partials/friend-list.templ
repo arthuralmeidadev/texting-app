@@ -1,0 +1,12 @@
+package partials
+
+templ FriendList(friends []string) {
+	<div>
+		for _, f := range friends {
+			<div class="friend-listed-item">
+				<img/>
+				<p>{ f }</p>
+			</div>
+		}
+	</div>
+}

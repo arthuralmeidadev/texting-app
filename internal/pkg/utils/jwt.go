@@ -20,7 +20,7 @@ var (
 	oncePrivKey sync.Once
 )
 
-func (m *jwtManager) NewToken(usrn string) (string, error) {
+func (m *jwtManager) NewToken(usrn string, exp time.Duration) (string, error) {
 	oncePrivKey.Do(func() {
 		privKeyFile, err := os.ReadFile("vault/private-key.pem")
 		if err != nil {
@@ -41,7 +41,7 @@ func (m *jwtManager) NewToken(usrn string) (string, error) {
 		jwt.SigningMethodRS256,
 		jwt.MapClaims{
 			"username": usrn,
-			"exp":      time.Now().Add(time.Hour * 2).Unix(),
+			"exp":      time.Now().Add(exp).Unix(),
 		},
 	)
 

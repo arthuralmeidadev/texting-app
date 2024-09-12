@@ -10,20 +10,20 @@ type messageStore interface {
 	DeleteMessage(msgId uint) error
 }
 
-type MessagesProvider struct {
+type messagesProvider struct {
 	store messageStore
 }
 
-func (p *MessagesProvider) StoreMessage(sen, cont string, chatId uint, repTo int) error {
+func (p *messagesProvider) StoreMessage(sen, cont string, chatId uint, repTo int) error {
 	return p.store.StoreMessage(sen, cont, chatId, repTo)
 }
 
-func (p *MessagesProvider) GetMessages(chatId, offset uint) ([]*models.Message, error) {
+func (p *messagesProvider) GetMessages(chatId, offset uint) ([]*models.Message, error) {
 	return p.store.GetMessages(chatId, offset)
 }
 
-func NewMessageProvider(s messageStore) *MessagesProvider {
-	return &MessagesProvider{
+func NewMessageProvider(s messageStore) *messagesProvider {
+	return &messagesProvider{
 		store: s,
 	}
 }

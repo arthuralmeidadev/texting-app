@@ -1,16 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 :root {
-    --main-accent: #8D22FF;
-    --dimmed-accent: #2E1D4F;
-    --light-accent: #A48CC5;
-    --background: #080808;
+    --main-accent: #008979;
+    --light-accent: #7FDDD2;
+    --background: #0F0F0F;
     --foreground: #FFFFFF;
     --dimmed-foreground: #AAAAAA;
     --window-color: #141414;
     --neutral-tile: #1C1C1C;
     --focused-tile: #2C2C2C;
-    --border-witdh: 2px;
+    --border-witdh: 1px;
     --text-l: 30px;
     --text-xl: 50px;
     --text-md: 22px;
@@ -136,7 +135,6 @@ body {
 }
 
 #msg-section {
-    border-right: var(--border-witdh) solid var(--focused-tile);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -256,4 +254,139 @@ body {
     font-weight: bold;
 }
 
-#chat-section {}
+#chat-section {
+    border-right: var(--border-witdh) solid var(--neutral-tile);
+}
+
+.hidden {
+    display: none !important;
+}
+
+#new-chat {
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 70%;
+    height: 75%;
+    padding: .5rem;
+}
+
+#new-chat h2 {
+    font-size: var(--text-md);
+    width: 100%;
+    text-align: center;
+    color: var(--foreground)
+}
+
+.full {
+    height: -webkit-fill-available;
+    width: 100%;
+}
+
+#new-chat-my-friends-heading {
+    height: fit-content;
+    display: flex;
+    padding-bottom: 1rem;
+}
+
+.searchInput {
+    display: flex;
+    position: relative;
+}
+
+.searchInput input {
+    appearance: none;
+    border: none;
+    outline: none;
+    border-radius: 2rem;
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    padding-inline: 1rem;
+    padding-block: .5rem;
+    background-color: var(--focused-tile);
+    height: fit-content;
+    width: 100%;
+}
+
+#friend-list-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: -webkit-fill-available;
+}
+
+#friend-list-initial p {
+    color: var(--foreground);
+    opacity: .5;
+    text-align: center;
+    font-size: var(--text-base);
+}
+
+#user-search-input {
+    appearance: none;
+    border: none;
+    outline: none;
+    border-radius: 2rem;
+    font-size: var(--text-sm);
+    color: var(--foreground);
+    padding-inline: 1rem;
+    padding-block: .5rem;
+    background-color: var(--background);
+    height: fit-content;
+    width: 100%;
+}
+
+#user-search-button {
+    background-color: var(--main-accent);
+    border-radius: 50%;
+    padding: .5rem;
+}
+
+#user-search-result-modal {
+    position: absolute;
+    border-radius: 8px;
+    background-color: var(--neutral-tile);
+    width: 100%;
+    z-index: 10;
+    padding-block: .5rem;
+    max-height: 14rem;
+    bottom: 100%;
+    display: none;
+}
+
+#user-search-input.hx-request .loading-icon {
+    display: block;
+}
+
+#user-search-result-modal:not(:empty) {
+    display: block;
+}
+
+.loading-icon {
+    display: none;
+    height: 1.4rem;
+    width: 1.4rem;
+    animation: infinite-spin 2s linear infinite;
+}
+
+@keyframes infinite-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.friend-listed-item {}
+
+.user-listed-item {
+    padding: .5rem;
+    color: var(--foreground);
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

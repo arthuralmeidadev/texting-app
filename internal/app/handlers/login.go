@@ -43,18 +43,28 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tk, err := usr.NewToken()
+		authTk, err := usr.NewAuthToken()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		authCookie := &http.Cookie{
-			Name:    "authenticationToken",
-			Value:   string(tk),
-			Expires: time.Now().Add(time.Hour * 2),
+		refTk, err := usr.NewAuthToken()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		http.SetCookie(w, authCookie)
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    "authenticationToken",
+			Value:   string(authTk),
+			Expires: time.Now().Add(time.Hour * 24),
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:    "refreshToken",
+			Value:   string(refTk),
+			Expires: time.Now().Add(time.Hour * 24),
+		})
 		w.Header().Set("HX-Redirect", "/chats")
 		w.WriteHeader(http.StatusFound)
 		return

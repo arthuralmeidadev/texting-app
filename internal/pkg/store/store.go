@@ -17,6 +17,10 @@ type store struct {
 	db *sql.DB
 }
 
+func numStr[T int | uint](n T) string {
+	return strconv.Itoa(int(n))
+}
+
 func (s *store) checkConn() {
 	if s.db == nil {
 		panic("Missing database connection")
@@ -67,7 +71,7 @@ func (s *store) CreateUser(usrn, pw string) (*models.User, error) {
         RETURNING USERNAME, PASSWORD;
     `
 	usr := models.User{}
-	err := s.db.QueryRow(q, usrn).Scan(&usr.Username, &usr.Password)
+	err := s.db.QueryRow(q, usrn, pw).Scan(&usr.Username, &usr.Password)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return nil, errors.New("no rows")
@@ -78,12 +82,96 @@ func (s *store) CreateUser(usrn, pw string) (*models.User, error) {
 	return &usr, nil
 }
 
+func (s *store) FindUser(forUsrn, usrn string, offset uint) ([]*models.User, error) {
+	s.checkConn()
+	q := `
+        SELECT
+            MAIN.USER.USERNAME
+        FROM MAIN.USER
+            LEFT JOIN MAIN.FRIENDSHIP
+                ON MAIN.FRIENDSHIP.SENDER = MAIN.USER.USERNAME
+                OR MAIN.FRIENDSHIP.RECIPIENT = MAIN.USER.USERNAME
+        WHERE 1 = 1
+            AND MAIN.FRIENDSHIP.SENDER IS NULL
+            AND MAIN.FRIENDSHIP.RECIPIENT IS NULL
+            AND MAIN.USER.USERNAME LIKE $1
+            AND MAIN.USER.USERNAME <> $2
+        ORDER BY MAIN.USER.USERNAME
+        OFFSET $3 LIMIT $4;
+    `
+
+	limit := 20
+	rows, err := s.db.Query(q, fmt.Sprint("%", usrn, "%"), forUsrn, numStr(offset), limit)
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "sql: no rows in result set" {
+			return nil, errors.New("no rows")
+		}
+		return nil, s.queryError(q, err)
+	}
+	defer rows.Close()
+
+	usrs := make([]*models.User, offset)
+	for rows.Next() {
+		usr := models.User{Password: ""}
+		err := rows.Scan(&usr.Username)
+		if err != nil {
+			return nil, err
+		}
+
+		usrs = append(usrs, &usr)
+	}
+
+	return usrs, nil
+}
+
+func (s *store) GetUserFriends(usrn string, offset uint) ([]*models.User, error) {
+	s.checkConn()
+	q := `
+        SELECT
+            MAIN.USER.USERNAME 
+        FROM MAIN.FRIENDSHIP
+            INNER JOIN MAIN.USER
+                ON MAIN.USER.USERNAME = MAIN.FRIENDSHIP.SENDER
+                OR MAIN.USER.USERNAME = MAIN.FRIENDSHIP.RECIPIENT
+        WHERE 1 = 1
+            AND MAIN.USER.USERNAME <> $1
+            AND MAIN.FRIENDSHIP.STATUS = 'ACCEPTED'
+        ORDER BY MAIN.USER.USERNAME
+        OFFSET $2 LIMIT $3;
+    `
+
+	limit := 20
+	rows, err := s.db.Query(q, usrn, numStr(offset), limit)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, errors.New("no rows")
+		}
+		return nil, s.queryError(q, err)
+	}
+	defer rows.Close()
+
+	usrs := make([]*models.User, offset)
+	for rows.Next() {
+		usr := models.User{Password: ""}
+		err := rows.Scan(&usr.Username)
+		if err != nil {
+			return nil, err
+		}
+
+		usrs = append(usrs, &usr)
+	}
+
+	return usrs, nil
+}
+
 func (s *store) StoreMessage(sen, cont string, chatId uint, repTo int) error {
 	s.checkConn()
 	q := `
         INSERT INTO MAIN.MESSAGE
         VALUES (
-            $1
+            DEFAULT
+            , $1
             , $2
             , $3
             , CURRENT_TIMESTAMP 
@@ -94,9 +182,9 @@ func (s *store) StoreMessage(sen, cont string, chatId uint, repTo int) error {
 	err := s.db.QueryRow(
 		q,
 		sen,
-		strconv.Itoa(int(chatId)),
+		numStr(chatId),
 		cont,
-		strconv.Itoa(repTo),
+		numStr(repTo),
 	).Scan(&msgId)
 	if err != nil {
 		return s.queryError(q, err)
@@ -105,7 +193,8 @@ func (s *store) StoreMessage(sen, cont string, chatId uint, repTo int) error {
 	q = `
         INSERT INTO MAIN.MESSAGE_STATE
         VALUES (
-            $1
+            DEFAULT
+            , $1
             , RECIPIENT
             , NULL
             , NULL
@@ -116,7 +205,7 @@ func (s *store) StoreMessage(sen, cont string, chatId uint, repTo int) error {
             AND CHAT = $2;
     `
 
-	_, err = s.db.Exec(q, strconv.Itoa(int(msgId)), strconv.Itoa(int(chatId)))
+	_, err = s.db.Exec(q, numStr(msgId), numStr(chatId))
 	if err != nil {
 		return s.queryError(q, err)
 	}
@@ -128,7 +217,7 @@ func (s *store) StoreMessage(sen, cont string, chatId uint, repTo int) error {
             AND CHAT = $1
     `
 
-	_, err = s.db.Exec(q, strconv.Itoa(int(chatId)))
+	_, err = s.db.Exec(q, numStr(chatId))
 	if err != nil {
 		return s.queryError(q, err)
 	}
@@ -149,7 +238,7 @@ func (s *store) UpdateMessageStatus(msgId uint, stat string) error {
             AND ID = $1;
     `, stat)
 
-	_, err := s.db.Exec(q, strconv.Itoa(int(msgId)))
+	_, err := s.db.Exec(q, numStr(msgId))
 	if err != nil {
 		return s.queryError(q, err)
 	}
@@ -174,7 +263,7 @@ func (s *store) GetMessages(chatId, offset uint) ([]*models.Message, error) {
         OFFSET $4 LIMIT $5;
     `
 	limit := 20
-	rows, err := s.db.Query(q, chatId, offset, limit)
+	rows, err := s.db.Query(q, chatId, numStr(offset), limit)
 	if err != nil {
 		return nil, s.queryError(q, err)
 	}
@@ -215,7 +304,8 @@ func (s *store) CreateChat(name string, usrs []string) (uint, error) {
 	q := `
         INSERT INTO MAIN.CHAT
         VALUES (
-            $1
+            DEFAULT
+            , $1
             , CURRENT_TIMESTAMP
             , CURRENT_TIMESTAMP
         )
@@ -262,7 +352,7 @@ func (s *store) GetChats(usrn string, offset uint) ([]*models.Chat, error) {
     `
 
 	limit := 20
-	rows, err := s.db.Query(q, usrn, offset, limit)
+	rows, err := s.db.Query(q, usrn, numStr(offset), limit)
 	if err != nil {
 		return nil, s.queryError(q, err)
 	}
@@ -282,32 +372,91 @@ func (s *store) GetChats(usrn string, offset uint) ([]*models.Chat, error) {
 	return chats, nil
 }
 
-func  (s *store) GetChatMembers(chatId uint) ([]string, error) {
-    s.checkConn()
-    q := `
+func (s *store) GetChatMembers(chatId uint) ([]string, error) {
+	s.checkConn()
+	q := `
         SELECT
             USERNAME
         FROM MAIN.CHAT_MEMBER
         WHERE 1 = 1
             AND CHAT = $1
     `
-    
-    rows, err := s.db.Query(q, &chatId)
-    if err != nil {
-		return nil, s.queryError(q, err)
-    }
 
-    members := make([]string, 1)    
+	rows, err := s.db.Query(q, &chatId)
+	if err != nil {
+		return nil, s.queryError(q, err)
+	}
+	defer rows.Close()
+
+	members := make([]string, 1)
+	for rows.Next() {
+		var member string
+		err := rows.Scan(&member)
+		if err != nil {
+			return nil, err
+		}
+		members = append(members, member)
+	}
+
+	return members, nil
+}
+
+func (s *store) SendFriendRequest(usrn, recUsrn string) error {
+	s.checkConn()
+	q := `
+        INSERT INTO MAIN.FRIENDSHIP
+        VALUES (
+            DEFAULT
+            , $1
+            , $2
+            , 'PENDING'
+            , CURRENT_TIMESTAMP
+        )
+    `
+
+	_, err := s.db.Exec(q, usrn, recUsrn)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *store) GetFriendRequests(usrn string, offset uint) ([]*models.FriendRequest, error) {
+	s.checkConn()
+	q := `
+        SELECT
+            SENDER
+            , RECIPIENT
+            , STATUS
+            , LAST_MODIFIED
+        FROM MAIN.FRIENDSHIP
+        WHERE 1 = 1
+            AND (
+                SENDER = $1
+                OR RECIPIENT = $1
+            )
+        OFFSET $2 LIMIT $3;
+    `
+
+	limit := 20
+	rows, err := s.db.Query(q, usrn, numStr(offset), limit)
+	if err != nil {
+		return nil, s.queryError(q, err)
+	}
+	defer rows.Close()
+
+    friendReqs := make([]*models.FriendRequest, limit)
     for rows.Next() {
-        var member string
-        err := rows.Scan(&member)
+        friendReq := models.FriendRequest{}
+        err := rows.Scan(&friendReq.SendUsrn, &friendReq.RecUsrn, &friendReq.Status, &friendReq.LastMod)
         if err != nil {
             return nil, err
         }
-        members = append(members, member) 
+        friendReqs = append(friendReqs, &friendReq)
     }
 
-    return members, nil 
+	return friendReqs, nil
 }
 
 func (s *store) DeleteChat(chatId uint) error {

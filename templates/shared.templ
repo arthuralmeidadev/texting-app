@@ -17,3 +17,9 @@ templ base(title string) {
 		</body>
 	</html>
 }
+
+templ searchInput(id string, placeholder string) {
+	<div id={ id } class="searchInput">
+		<input type="text" placeholder={ placeholder }/>
+	</div>
+}
